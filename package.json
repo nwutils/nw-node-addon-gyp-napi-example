@@ -17,10 +17,11 @@
         "postinstall": "base-volta-off-of-nwjs",
         "gyp": "node index.mjs",
         "nw": "nw .",
-        "test": "vitest run"
+        "test": "vitest run",
+        "rebuild": "node-gyp rebuild --debug --nodedir=./node --target=23.11.0 --verbose"
     },
     "volta": {
         "node": "23.11.0",
-        "npm": "11.3.0"
+        "npm": "11.4.1"
     }
 }
