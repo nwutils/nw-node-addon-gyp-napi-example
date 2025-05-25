@@ -8,7 +8,7 @@ import axios from "axios";
 import * as semver from "semver";
 import * as tar from "tar";
 
-import nodeManifest from "./package.json" assert { type: "json"};
+import nodeManifest from "./package.json" with { type: "json"};
 
 const version = nodeManifest.devDependencies.nw.slice(1);
 const parsedVersion = semver.parse(version);
@@ -40,10 +40,6 @@ async function decompressHeaders() {
     });
 }
 
-function rebuild() {
-    child_process.execFileSync('node-gyp', ['rebuild', `--target=${nodeManifest.volta.node}`, `--nodedir=${path.resolve('node')}`]);
-}
-
 export async function main() {
 
     if (fs.existsSync(headersPath) === false) {
@@ -52,7 +48,5 @@ export async function main() {
 
     await decompressHeaders();
 
-    if (fs.existsSync(path.resolve('build', 'Release', 'hello.node')) === false) {
-        rebuild();
-    }
+    child_process.execFileSync('node-gyp', ['rebuild', `--target=${nodeManifest.volta.node}`, `--nodedir=${path.resolve('node')}`, '--verbose']);
 }
