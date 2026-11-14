@@ -4,5 +4,18 @@ updates:
     directory: "."
     schedule:
       interval: "monthly"
-      day: "saturday"
     versioning-strategy: increase
+    ignore:
+    groups:
+      npm:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "github-actions"
+    directory: ".github/workflows"
+    schedule:
+      interval: "monthly"
+    groups:
+      gha:
+        patterns:
+          - "*"
