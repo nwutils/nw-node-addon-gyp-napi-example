@@ -3,9 +3,12 @@
     {
       "target_name": "hello",
       "sources": [ "hello.cc" ],
-      # The common.gypi shipped in the NW.js headers tarball (v0.111.3+) forces
-      # Chromium's LLVM linker (-fuse-ld=lld) on Linux and macOS. Most systems
-      # do not have lld installed, so drop it and use the default linker.
+      # The common.gypi shipped in the NW.js headers tarball (v0.111.3+) adds
+      # flags meant for NW.js' own clang/LLD toolchain:
+      #  - -fuse-ld=lld on Linux and macOS. Most systems do not have LLD
+      #    installed, so drop it and use the default linker.
+      #  - --target=<triple> on Linux ARM. This is a clang-only flag that GCC
+      #    rejects; native builds do not need it.
       "target_conditions": [
         [ "OS=='mac'", {
           "xcode_settings": {
@@ -14,7 +17,15 @@
           }
         }],
         [ "OS!='mac' and OS!='win'", {
-          "ldflags!": [ "-fuse-ld=lld" ]
+          "cflags!": [
+            "--target=aarch64-linux-gnu",
+            "--target=arm-linux-gnueabihf"
+          ],
+          "ldflags!": [
+            "-fuse-ld=lld",
+            "--target=aarch64-linux-gnu",
+            "--target=arm-linux-gnueabihf"
+          ]
         }]
       ]
     }
