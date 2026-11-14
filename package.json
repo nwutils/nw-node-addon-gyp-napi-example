@@ -28,5 +28,8 @@
       "version": "12.2.2",
       "onFail": "warn"
     }
+  },
+  "allowScripts": {
+    "nw": true
   }
 }
