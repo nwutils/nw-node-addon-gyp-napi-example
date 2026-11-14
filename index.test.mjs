@@ -18,7 +18,7 @@ describe('NW.js Selenium test suite example', async () => {
      */
     beforeAll(async function () {
 
-        main();
+        await main();
 
         const options = new chrome.Options();
 

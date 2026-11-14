@@ -13,19 +13,34 @@ const require = createRequire(import.meta.url);
 const nwVersion = require("nw/package.json").version.replace(/-sdk$/, "");
 const disturl = "https://dl.nwjs.io/";
 
+/**
+ * Build the addon with node-gyp. Runs asynchronously so callers (e.g. the
+ * test runner) are not blocked while the native build is running.
+ * @returns {Promise<void>}
+ */
 export function main() {
-    child_process.execFileSync(
-        process.execPath,
-        [
-            require.resolve("node-gyp/bin/node-gyp.js"),
-            "rebuild",
-            `--target=${nwVersion}`,
-            `--disturl=${disturl}`,
-        ],
-        { stdio: "inherit" },
-    );
+    return new Promise((resolve, reject) => {
+        const child = child_process.spawn(
+            process.execPath,
+            [
+                require.resolve("node-gyp/bin/node-gyp.js"),
+                "rebuild",
+                `--target=${nwVersion}`,
+                `--disturl=${disturl}`,
+            ],
+            { stdio: "inherit" },
+        );
+        child.on("error", reject);
+        child.on("exit", (code, signal) => {
+            if (code === 0) {
+                resolve();
+            } else {
+                reject(new Error(`node-gyp rebuild failed (code: ${code}, signal: ${signal})`));
+            }
+        });
+    });
 }
 
 if (process.argv[1] === url.fileURLToPath(import.meta.url)) {
-    main();
+    await main();
 }
