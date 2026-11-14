@@ -18,6 +18,8 @@ Starting with v0.111.3, NW.js publishes Node.js-compatible headers tarballs, so 
    npm rebuild --target=0.120.0 --disturl=https://dl.nwjs.io/
    ```
 
+   Note: the `common.gypi` shipped with the NW.js headers adds `-fuse-ld=lld` to the link flags on Linux and macOS. If you don't have [LLD](https://lld.llvm.org/) installed, linking fails (`cannot find 'ld'` on Linux, `invalid linker name in argument '-fuse-ld=lld'` on macOS). Either install LLD, or remove the flag in your `binding.gyp` as this example does.
+
 1. The compiled addon will be at `$PWD/build/Release/{addon_name}.node`. For example, if the `target` value in your `binding.gyp` file is `hello`, then the file will be `$PWD/build/Release/hello.node`.
 1. Import the module inside your application: `const { hello } = require('./build/Release/hello');`
 
