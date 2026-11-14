@@ -33,6 +33,8 @@ Starting with v0.111.3, NW.js publishes Node.js-compatible headers tarballs, so 
 ## Getting Started with demo application
 
 1. Clone repo
+1. Use the Node.js and npm versions in `devEngines` in `package.json`. The Node.js version matches the one bundled with NW.js.
 1. `npm i` to install Node modules
+1. After bumping `nw`, run `npm run doctor` to update `devEngines` from https://nwjs.io/versions.json via [`@nwutils/doctor`](https://www.npmjs.com/package/@nwutils/doctor)
 1. `npm run gyp` to build the Node Native Addon with `node-gyp` (headers are fetched from https://dl.nwjs.io)
 1. `npm run nw` to run NW.js app.

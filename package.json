@@ -1,24 +1,32 @@
 {
-    "name": "nw-node-addon-gyp-example",
-    "version": "1.0.0",
-    "main": "index.html",
-    "private": true,
-    "gypfile": false,
-    "devDependencies": {
-        "base-volta-off-of-nwjs": "^1.0.5",
-        "node-gyp": "^13.1.0",
-        "nw": "^0.120.0",
-        "selenium-webdriver": "^4.32.0",
-        "vitest": "^3.1.3"
+  "name": "nw-node-addon-gyp-example",
+  "version": "1.0.0",
+  "main": "index.html",
+  "private": true,
+  "gypfile": false,
+  "devDependencies": {
+    "@nwutils/doctor": "^0.1.3",
+    "node-gyp": "^13.1.0",
+    "nw": "^0.120.0",
+    "selenium-webdriver": "^4.32.0",
+    "vitest": "^3.1.3"
+  },
+  "scripts": {
+    "doctor": "node doctor.mjs",
+    "gyp": "node index.mjs",
+    "nw": "nw .",
+    "test": "vitest run"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "onFail": "warn",
+      "version": "26.12.1"
     },
-    "scripts": {
-        "postinstall": "base-volta-off-of-nwjs",
-        "gyp": "node index.mjs",
-        "nw": "nw .",
-        "test": "vitest run"
-    },
-    "volta": {
-        "node": "26.12.1",
-        "npm": "11.3.0"
+    "packageManager": {
+      "name": "npm",
+      "version": "12.2.2",
+      "onFail": "warn"
     }
+  }
 }
