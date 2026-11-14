@@ -1,58 +1,46 @@
 import child_process from "node:child_process";
-import fs from "node:fs";
-import path from "node:path";
+import { createRequire } from "node:module";
 import process from "node:process";
-import stream from "node:stream";
+import url from "node:url";
 
-import axios from "axios";
-import * as semver from "semver";
-import * as tar from "tar";
+const require = createRequire(import.meta.url);
 
-import nodeManifest from "./package.json" assert { type: "json"};
+/**
+ * NW.js version of the installed `nw` package, without the `-sdk` suffix.
+ * Starting with v0.111.3, NW.js publishes Node.js-compatible headers tarballs,
+ * so upstream `node-gyp` can target the NW.js version directly.
+ */
+const nwVersion = require("nw/package.json").version.replace(/-sdk$/, "");
+const disturl = "https://dl.nwjs.io/";
 
-const version = nodeManifest.devDependencies.nw.slice(1);
-const parsedVersion = semver.parse(version);
-const nwVersion = `${parsedVersion.major}.${parsedVersion.minor}.${parsedVersion.patch}`;
-const headersUrl = `https://dl.nwjs.io/v${nwVersion}/nw-headers-v${nwVersion}.tar.gz`;
-const headersPath = path.resolve(process.cwd(), `nw-headers-v${nwVersion}.tar.gz`);
-
-await main();
-
-async function downloadHeaders() {
-
-    const writeStream = fs.createWriteStream(headersPath);
-
-    const response = await axios({
-        method: 'get',
-        url: headersUrl,
-        responseType: 'stream'
+/**
+ * Build the addon with node-gyp. Runs asynchronously so callers (e.g. the
+ * test runner) are not blocked while the native build is running.
+ * @returns {Promise<void>}
+ */
+export function main() {
+    return new Promise((resolve, reject) => {
+        const child = child_process.spawn(
+            process.execPath,
+            [
+                require.resolve("node-gyp/bin/node-gyp.js"),
+                "rebuild",
+                `--target=${nwVersion}`,
+                `--disturl=${disturl}`,
+            ],
+            { stdio: "inherit" },
+        );
+        child.on("error", reject);
+        child.on("exit", (code, signal) => {
+            if (code === 0) {
+                resolve();
+            } else {
+                reject(new Error(`node-gyp rebuild failed (code: ${code}, signal: ${signal})`));
+            }
+        });
     });
-
-    await stream.promises.pipeline(response.data, writeStream);
 }
 
-async function decompressHeaders() {
-    await fs.promises.rm('./node', { recursive: true, force: true });
-
-    await tar.extract({
-        file: headersPath,
-        C: process.cwd(),
-    });
-}
-
-function rebuild() {
-    child_process.execFileSync('node-gyp', ['rebuild', `--target=${nodeManifest.volta.node}`, `--nodedir=${path.resolve('node')}`]);
-}
-
-export async function main() {
-
-    if (fs.existsSync(headersPath) === false) {
-        await downloadHeaders();
-    }
-
-    await decompressHeaders();
-
-    if (fs.existsSync(path.resolve('build', 'Release', 'hello.node')) === false) {
-        rebuild();
-    }
+if (process.argv[1] === url.fileURLToPath(import.meta.url)) {
+    await main();
 }

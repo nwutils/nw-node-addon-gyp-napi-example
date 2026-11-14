@@ -32,7 +32,7 @@ describe('NW.js Selenium test suite example', async () => {
         const service = new chrome.ServiceBuilder(await findpath('chromedriver'), { sdk: 'flavor' }).build();
 
         driver = chrome.Driver.createSession(options, service);
-    }, 30000);
+    }, 300000);
 
     it('text is displayed on page', async function () {
         const textElement = await driver.findElement(selenium.By.id('test'));
@@ -41,6 +41,6 @@ describe('NW.js Selenium test suite example', async () => {
     }, Infinity);
 
     afterAll(async function () {
-        await driver.quit();
+        await driver?.quit();
     });
 });
