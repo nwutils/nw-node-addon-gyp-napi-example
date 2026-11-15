@@ -43,10 +43,15 @@ Starting with v0.111.3, NW.js publishes Node.js-compatible headers tarballs, so 
 
 ## Node-API with cmake-js
 
-[cmake-js](https://github.com/cmake-js/cmake-js) builds the addon in `cmake/` with CMake. Because `cmake/package.json` declares `binary.napi_versions`, cmake-js uses the `node-api-headers` package instead of downloading runtime headers. On Windows, it generates `node.lib` from the Node-API definition file, and its delay-load hook resolves the Node-API symbols from NW.js' `node.dll` at runtime.
+[cmake-js](https://github.com/cmake-js/cmake-js) builds the addon in `cmake/` with CMake. Because `cmake/package.json` declares `binary.napi_versions`, cmake-js uses the `node-api-headers` package instead of downloading runtime headers.
+
+On Windows, link against NW.js' own import library, `https://dl.nwjs.io/v<version>/<arch>/node.lib` (`arch` is `x64`, `arm64` or `x86`), which imports the Node-API symbols from NW.js' `node.dll`. cmake-js' default (a `node.lib` generated from the Node-API definition file plus a delay-load hook) crashes the NW.js renderer when the addon is loaded. `index.mjs` downloads `node.lib` and passes it to `cmake/CMakeLists.txt`:
 
 ```bash
+# Linux, macOS
 cmake-js rebuild --directory cmake --out cmake/build
+# Windows
+cmake-js rebuild --directory cmake --out cmake/build --CDNW_NODE_LIB=/path/to/node.lib
 ```
 
 The addon will be at `cmake/build/Release/hello_cmake.node`.
