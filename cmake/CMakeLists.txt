@@ -17,6 +17,19 @@ add_definitions(-DNAPI_VERSION=8)
 
 include_directories(${CMAKE_JS_INC})
 
+# Fail the build instead of producing an addon that crashes at runtime: if
+# cmake-js passes C++ sources (the Windows delay-load hook) but CXX is not
+# enabled, CMake would silently leave them out.
+get_property(ENABLED_LANGUAGES GLOBAL PROPERTY ENABLED_LANGUAGES)
+foreach(CMAKE_JS_SOURCE IN LISTS CMAKE_JS_SRC)
+  if(CMAKE_JS_SOURCE MATCHES "\\.(cc|cpp|cxx)$" AND NOT "CXX" IN_LIST ENABLED_LANGUAGES)
+    message(FATAL_ERROR
+      "cmake-js source '${CMAKE_JS_SOURCE}' is C++, but CXX is not enabled. "
+      "Add CXX to project() (e.g. project(${PROJECT_NAME} C CXX)); otherwise "
+      "CMake skips it and the addon crashes when it is loaded.")
+  endif()
+endforeach()
+
 add_library(${PROJECT_NAME} SHARED hello.c ${CMAKE_JS_SRC})
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "" SUFFIX ".node")
 target_link_libraries(${PROJECT_NAME} ${CMAKE_JS_LIB})
