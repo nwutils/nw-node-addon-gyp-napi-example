@@ -32,10 +32,15 @@ describe('NW.js Selenium test suite example', async () => {
         const service = new chrome.ServiceBuilder(await findpath('chromedriver'), { sdk: 'flavor' }).build();
 
         driver = chrome.Driver.createSession(options, service);
-    }, 300000);
+    }, 600000);
 
-    it('text is displayed on page', async function () {
-        const textElement = await driver.findElement(selenium.By.id('test'));
+    it.each([
+        ['napi', 'Node-API addon built with node-gyp'],
+        ['nan', 'NAN addon built with node-gyp'],
+        ['cmake', 'Node-API addon built with cmake-js'],
+        ['ffi', 'C library built with CMake, loaded via koffi'],
+    ])('%s: %s', async function (id) {
+        const textElement = await driver.findElement(selenium.By.id(id));
         const text = await textElement.getText();
         expect(text).toEqual('world');
     }, Infinity);

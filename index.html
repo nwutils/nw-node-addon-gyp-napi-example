@@ -5,17 +5,34 @@
 <head>
     <title>NW.js Node Native Addon Demo</title>
     <script>
+        const examples = {
+            napi: () => require("./build/Release/hello"),
+            nan: () => require("./build/Release/hello_nan"),
+            cmake: () => require("./cmake/build/Release/hello_cmake"),
+            ffi: () => require("./ffi/index.cjs"),
+        };
+
         window.onload = () => {
-            const { hello } = require("./build/Release/hello");
-            document.getElementById("test").textContent = hello();
+            for (const [id, load] of Object.entries(examples)) {
+                const element = document.getElementById(id);
+                try {
+                    element.textContent = load().hello();
+                } catch (error) {
+                    element.textContent = String(error);
+                }
+            }
         };
     </script>
 </head>
 
 <body>
-    <span id="test"></span>
-    <br />
-    <span>If you can see the "world" text above, then the Node Native module was successfully built.</span>
+    <p>If you can see "world" next to each example, then the addon was successfully built and loaded.</p>
+    <ul>
+        <li>Node-API (node-gyp): <span id="napi"></span></li>
+        <li>NAN (node-gyp): <span id="nan"></span></li>
+        <li>Node-API (cmake-js): <span id="cmake"></span></li>
+        <li>FFI (CMake + koffi): <span id="ffi"></span></li>
+    </ul>
 </body>
 
 </html>
