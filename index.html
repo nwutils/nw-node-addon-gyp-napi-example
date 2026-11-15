@@ -12,8 +12,18 @@
             ffi: () => require("./ffi/index.cjs"),
         };
 
+        // `--example=<id>` loads a single example (used by the test suite, so
+        // that one failing addon cannot take down the others). Without it,
+        // all examples are loaded.
+        const only = nw.App.fullArgv
+            .find((arg) => arg.startsWith("--example="))
+            ?.slice("--example=".length);
+
         window.onload = () => {
             for (const [id, load] of Object.entries(examples)) {
+                if (only && only !== id) {
+                    continue;
+                }
                 const element = document.getElementById(id);
                 try {
                     element.textContent = load().hello();
