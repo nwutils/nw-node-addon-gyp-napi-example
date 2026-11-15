@@ -1,40 +1,49 @@
 # nw-node-addon-gyp-example
 
-Build Node Addon using `node-gyp`.
+Build Node addons for NW.js four ways:
 
-## Approach (v0.111.3 and later)
+| Example | Directory | Build tool |
+| --- | --- | --- |
+| Node-API | `napi/` | node-gyp |
+| NAN | `nan/` | node-gyp |
+| Node-API | `cmake/` | cmake-js |
+| FFI | `ffi/` | CMake + [koffi](https://koffi.dev) |
 
-Starting with v0.111.3, NW.js publishes Node.js-compatible headers tarballs, so upstream `node-gyp` can build addons directly. No manual header download, `nw-gyp` or custom environment variables are needed.
+## node-gyp (Node-API, NAN)
 
-1. (Re)build Node addons for NW.js by passing the **NW.js version** as the target and the NW.js download server as the dist URL:
+From v0.111.3, pass the NW.js version and download server:
 
-   ```bash
-   node-gyp rebuild --target=0.120.0 --disturl=https://dl.nwjs.io/
-   ```
+```bash
+node-gyp rebuild --target=0.120.0 --disturl=https://dl.nwjs.io/
+```
 
-   `node-gyp` downloads and caches the headers from the NW.js download server automatically. The same flags work with npm:
+Output: `build/Release/<target_name>.node`. NAN uses the V8 API, so rebuild it for every NW.js version.
 
-   ```bash
-   npm rebuild --target=0.120.0 --disturl=https://dl.nwjs.io/
-   ```
+The NW.js `common.gypi` adds `-fuse-ld=lld` (Linux, macOS) and `--target=<triple>` (Linux ARM), which fail without LLD or with GCC. `binding.gyp` removes them in `target_defaults`.
 
-   Note: the `common.gypi` shipped with the NW.js headers adds `-fuse-ld=lld` to the link flags on Linux and macOS. If you don't have [LLD](https://lld.llvm.org/) installed, linking fails (`cannot find 'ld'` on Linux, `invalid linker name in argument '-fuse-ld=lld'` on macOS). Either install LLD, or remove the flag in your `binding.gyp` as this example does.
+Before v0.111.3 (from v0.83): download `nw-headers-v<version>.tar.gz` from https://dl.nwjs.io, look up the Node version in https://nwjs.io/versions.json, and run `node-gyp rebuild --target=<node version> --nodedir=<headers dir>`.
 
-1. The compiled addon will be at `$PWD/build/Release/{addon_name}.node`. For example, if the `target` value in your `binding.gyp` file is `hello`, then the file will be `$PWD/build/Release/hello.node`.
-1. Import the module inside your application: `const { hello } = require('./build/Release/hello');`
+## cmake-js (Node-API)
 
-## Approach (v0.83 to v0.111.2)
+```bash
+cmake-js rebuild --directory cmake --out cmake/build
+```
 
-1. Download NW.js Node headers tarball from https://dl.nwjs.io. For example, for headers for v0.99.1 can be downloaded [here](https://dl.nwjs.io/v0.99.1/nw-headers-v0.99.1.tar.gz).
-1. Get the Node version used by the NW.js release version from https://nwjs.io/versions.json. For example, for v0.99.1 the Node version is 23.11.0
-1. (Re)build Node addons for NW.js: `node-gyp rebuild --target=23.11.0 --nodedir=/path/to/node/headers/directory`
-1. The compiled addon will be at `$PWD/build/Release/{addon_name}.node`.
+`binary.napi_versions` in `cmake/package.json` makes cmake-js use `node-api-headers`, so no NW.js headers are needed. Enable `CXX` in `project()` even for C addons: on Windows cmake-js adds a C++ delay-load hook, and without it the addon crashes NW.js. `CMakeLists.txt` fails the build if `CXX` is missing.
 
-## Getting Started with demo application
+## FFI (koffi)
 
-1. Clone repo
-1. Use the Node.js and npm versions in `devEngines` in `package.json`. The Node.js version matches the one bundled with NW.js.
-1. `npm i` to install Node modules
-1. After bumping `nw`, run `npm run doctor` to update `devEngines` from https://nwjs.io/versions.json via [`@nwutils/doctor`](https://www.npmjs.com/package/@nwutils/doctor)
-1. `npm run gyp` to build the Node Native Addon with `node-gyp` (headers are fetched from https://dl.nwjs.io)
-1. `npm run nw` to run NW.js app.
+```bash
+cmake -S ffi -B ffi/build -DCMAKE_BUILD_TYPE=Release
+cmake --build ffi/build --config Release
+```
+
+A plain C library, no NW.js headers, loaded with koffi in `ffi/index.cjs`.
+
+## Getting started
+
+1. Use the Node.js and npm versions in `devEngines` (`npm run doctor` updates them from https://nwjs.io/versions.json after bumping `nw`).
+1. Install CMake and a C/C++ compiler (Visual Studio "Desktop development with C++" on Windows).
+1. `npm i`
+1. `npm run build`
+1. `npm run nw`: each example should show "world".
