@@ -1,5 +1,4 @@
 import child_process from "node:child_process";
-import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import process from "node:process";
@@ -54,39 +53,16 @@ export function buildGyp() {
 }
 
 /**
- * Download NW.js' node.lib import library for Windows.
- * @returns {Promise<string>} absolute path to node.lib
- */
-async function downloadNodeLib() {
-    const arch = { x64: "x64", arm64: "arm64", ia32: "x86" }[process.arch];
-    const libPath = path.join(rootDir, "cmake", "nw", arch, "node.lib");
-    if (fs.existsSync(libPath)) {
-        return libPath;
-    }
-    const response = await fetch(`${disturl}v${nwVersion}/${arch}/node.lib`);
-    if (!response.ok) {
-        throw new Error(`Failed to download node.lib: ${response.status} ${response.url}`);
-    }
-    fs.mkdirSync(path.dirname(libPath), { recursive: true });
-    fs.writeFileSync(libPath, Buffer.from(await response.arrayBuffer()));
-    return libPath;
-}
-
-/**
  * Node-API addon (cmake/) with cmake-js.
  * Output: cmake/build/Release/hello_cmake.node
  */
-export async function buildCMakeJs() {
-    const args = [
+export function buildCMakeJs() {
+    return run(process.execPath, [
         require.resolve("cmake-js/bin/cmake-js"),
         "rebuild",
         "--directory", "cmake",
         "--out", path.join("cmake", "build"),
-    ];
-    if (process.platform === "win32") {
-        args.push(`--CDNW_NODE_LIB=${await downloadNodeLib()}`);
-    }
-    return run(process.execPath, args);
+    ]);
 }
 
 /**
